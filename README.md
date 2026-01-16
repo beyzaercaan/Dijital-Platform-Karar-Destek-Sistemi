@@ -73,5 +73,8 @@ Dashboard panelinde içerik tipine göre dağılım, izlenme ve beğeni trendler
 - DELETE /api/analiz/begeni-trend – Beğeni trend verisini siler
 - DELETE /api/analiz/etkileşim-haritasi – Harita verisini siler
 
+<img width="1572" height="551" alt="kds_er_diyagramı" src="https://github.com/user-attachments/assets/2cbef92b-14c3-4d2a-89ab-f2fa52436326" />
+
+
 
 
