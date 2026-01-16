@@ -50,26 +50,28 @@ Dashboard panelinde içerik tipine göre dağılım, izlenme ve beğeni trendler
 
 **API ENDPOİNTLERİ**
 
-GET /api/analiz/kpi – Ana paneldeki KPI değerlerini getirir (toplam içerik, izlenme, beğeni vb.)
-GET /api/analiz/icerik-tipi-dagilim – İçerik türüne göre dağılımı gösterir (bar/pasta grafikleri için)
-GET /api/analiz/izlenme-trend – İçeriklerin izlenme trendini döndürür (seasonality grafikleri için)
-GET /api/analiz/begeni-trend – İçeriklerin beğeni trendini döndürür (seasonality veya performans grafikleri)
-GET /api/analiz/etkileşim-haritasi – İçerik bazlı etkileşim yoğunluğunu harita üzerinde gösterir
+- GET /api/analiz/kpi – Ana paneldeki KPI değerlerini getirir (toplam içerik, izlenme, beğeni vb.)
+- GET /api/analiz/icerik-tipi-dagilim – İçerik türüne göre dağılımı gösterir (bar/pasta grafikleri için)
+- GET /api/analiz/izlenme-trend – İçeriklerin izlenme trendini döndürür (seasonality grafikleri için)
+- GET /api/analiz/begeni-trend – İçeriklerin beğeni trendini döndürür (seasonality veya performans grafikleri)
+- GET /api/analiz/etkileşim-haritasi – İçerik bazlı etkileşim yoğunluğunu harita üzerinde gösterir
 
-POST /api/analiz/kpi – Yeni KPI değeri ekler
-POST /api/analiz/icerik-tipi-dagilim – Yeni içerik tipi dağılım verisi ekler
-POST /api/analiz/izlenme-trend – Yeni izlenme trend verisi ekler
-POST /api/analiz/begeni-trend – Yeni beğeni trend verisi ekler
-POST /api/analiz/etkileşim-haritasi – Yeni harita verisi ekler
+- POST /api/analiz/kpi – Yeni KPI değeri ekler
+- POST /api/analiz/icerik-tipi-dagilim – Yeni içerik tipi dağılım verisi ekler
+- POST /api/analiz/izlenme-trend – Yeni izlenme trend verisi ekler
+- POST /api/analiz/begeni-trend – Yeni beğeni trend verisi ekler
+- POST /api/analiz/etkileşim-haritasi – Yeni harita verisi ekler
 
-PUT /api/analiz/kpi – Mevcut KPI değerini günceller
-PUT /api/analiz/icerik-tipi-dagilim – Mevcut içerik tipi dağılımını günceller
-PUT /api/analiz/izlenme-trend – Mevcut izlenme trendini günceller
-PUT /api/analiz/begeni-trend – Mevcut beğeni trendini günceller
-PUT /api/analiz/etkileşim-haritasi – Mevcut harita verisini günceller
+- PUT /api/analiz/kpi – Mevcut KPI değerini günceller
+- PUT /api/analiz/icerik-tipi-dagilim – Mevcut içerik tipi dağılımını günceller
+- PUT /api/analiz/izlenme-trend – Mevcut izlenme trendini günceller
+- PUT /api/analiz/begeni-trend – Mevcut beğeni trendini günceller
+- PUT /api/analiz/etkileşim-haritasi – Mevcut harita verisini günceller
 
-DELETE /api/analiz/kpi – KPI değerini siler
-DELETE /api/analiz/icerik-tipi-dagilim – İçerik tipi dağılımını siler
-DELETE /api/analiz/izlenme-trend – İzlenme trend verisini siler
-DELETE /api/analiz/begeni-trend – Beğeni trend verisini siler
-DELETE /api/analiz/etkileşim-haritasi – Harita verisini siler
+- DELETE /api/analiz/kpi – KPI değerini siler
+- DELETE /api/analiz/icerik-tipi-dagilim – İçerik tipi dağılımını siler
+- DELETE /api/analiz/izlenme-trend – İzlenme trend verisini siler
+- DELETE /api/analiz/begeni-trend – Beğeni trend verisini siler
+- DELETE /api/analiz/etkileşim-haritasi – Harita verisini siler
+
+
