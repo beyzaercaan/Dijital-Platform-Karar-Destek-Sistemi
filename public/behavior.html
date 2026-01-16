@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Kullanıcı–İçerik Analizi • StreamKDS</title>
+
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Bu sayfaya özel küçük dokunuşlar (style.css’i bozmadan, figma hissi için) -->
+  <style>
+    /* SAYFA DÜZENİ */
+    .page-title-wrap{ display:flex; flex-direction:column; gap:6px; }
+    .page-sub{ color: rgba(255,255,255,.62); margin:0; font-size:13px; }
+
+    /* YEAR SEGMENT: index ile aynı sınıflar, aynı görünüm */
+    .header-actions{ display:flex; align-items:center; gap:12px; }
+
+    /* Grafik kartları: hepsi eşit yükseklik */
+    .chart-wrap.equal { height: 340px !important; padding: 12px; }
+    .chart-wrap.equal canvas{ width:100% !important; height:100% !important; display:block; }
+
+    /* İki satırlı başlıklar daha “product” hissetsin */
+    .card-head h2{ font-size:16px; }
+    .hint{ max-width: 52ch; text-align:right; }
+
+    /* 2x2 grid: anlatım bütünlüğü için */
+    .grid-2x2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* küçük ekran */
+    @media (max-width: 1100px){
+      .grid-2x2{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- SIDEBAR (index ile uyumlu) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <div>
+        <div class="brand-title">KDS Dashboard</div>
+        <div class="brand-sub">Film Platform Analitiği</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="anapanel.html">Genel Bakış</a>
+      <a class="nav-item active" href="behavior.html">Kullanıcı–İçerik Analizi</a>
+      <a class="nav-item" href="seasonality.html">Trend Analizleri</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="pill">6–12 ay stratejik karar desteği</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HEADER (yıl kutuları geri + ay filtresi yok) -->
+    <header class="header">
+      <div class="page-title-wrap">
+        <h1 style="margin:0;">Kullanıcı–İçerik Analizi</h1>
+        <p class="page-sub">Tip & Tür bazında tüketim kalitesi (süre + tamamlanma) ve içerik “yaşı” etkisi</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="segmented" role="tablist" aria-label="Yıl filtresi">
+          <button class="seg-btn active" data-year="all" type="button">Tümü</button>
+          <button class="seg-btn" data-year="2023" type="button">2023</button>
+          <button class="seg-btn" data-year="2024" type="button">2024</button>
+          <button class="seg-btn" data-year="2025" type="button">2025</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- KPI (sade, operasyonel değil; yalnızca stratejik özet) -->
+    <section class="kpi-grid">
+      <div class="card kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">En Güçlü Tip</div>
+          <div class="kpi-badge">✓</div>
+        </div>
+        <div class="kpi-value" id="kpiBestType">—</div>
+        <div class="kpi-foot" id="kpiBestTypeSub">Süre + tamamlanma birlikte</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">En Güçlü Tür</div>
+          <div class="kpi-badge">✓</div>
+        </div>
+        <div class="kpi-value" id="kpiBestGenre">—</div>
+        <div class="kpi-foot" id="kpiBestGenreSub">Süre + tamamlanma birlikte</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Katalog “Yaş” Eğilimi</div>
+          <div class="kpi-badge">↗</div>
+        </div>
+        <div class="kpi-value" id="kpiCatalogTrend">—</div>
+        <div class="kpi-foot">Yeni mi, eski mi tüketiliyor?</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Çeşitlilik Etkisi</div>
+          <div class="kpi-badge">◎</div>
+        </div>
+        <div class="kpi-value" id="kpiVariety">—</div>
+        <div class="kpi-foot">Tür sayısı ↑ → süre ↑ ?</div>
+      </div>
+    </section>
+
+    <!-- 2x2 GRID (anlam bütünlüğü) -->
+    <section class="grid-2x2">
+
+      <!-- 1) TYPE: COMBO (bar + line) -> “sütun gibi durmasın” -->
+      <div class="card">
+        <div class="card-head">
+          <h2>İçerik Tipi Karşılaştırma</h2>
+          <div class="hint">Bar: Ort. İzlenme Süresi (dk) • Çizgi: Tamamlanma (%)</div>
+        </div>
+        <div class="chart-wrap equal">
+          <canvas id="chartTypeCombo"></canvas>
+        </div>
+      </div>
+
+      <!-- 2) GENRE: HORIZONTAL BAR (dual metric) -->
+      <div class="card">
+        <div class="card-head">
+          <h2>İçerik Türü Karşılaştırma</h2>
+          <div class="hint">Yatay: Tür bazında süre & tamamlanma (12 tür dahil)</div>
+        </div>
+        <div class="chart-wrap equal">
+          <canvas id="chartGenreHorizontal"></canvas>
+        </div>
+      </div>
+
+      <!-- 3) Variety Scatter (farklı tip) -->
+      <div class="card">
+        <div class="card-head">
+          <h2>Tür Çeşitliliği → Tüketim Kalitesi</h2>
+          <div class="hint">Scatter: Tür sayısı ↑ olunca ort. süre/tamamlanma nasıl değişiyor?</div>
+        </div>
+        <div class="chart-wrap equal">
+          <canvas id="chartVarietyScatter"></canvas>
+        </div>
+      </div>
+
+      <!-- 4) Release Year Lines (farklı tip) -->
+      <div class="card">
+        <div class="card-head">
+          <h2>Yayın Yılı Etkisi</h2>
+          <div class="hint">Çizgi: Tip bazında “izlenme payı (%)” — eski vs yeni içerik tüketimi</div>
+        </div>
+        <div class="chart-wrap equal">
+          <canvas id="chartReleaseYearLine"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* =========================
+   0) SABİT LİSTELER
+========================= */
+const TYPES = ["Film","Dizi","Kısa İçerik","Animasyon"];
+const GENRES = ["Aksiyon","Dram","Komedi","Bilim Kurgu","Gerilim","Korku","Romantik","Suç","Macera","Fantastik","Gençlik","Aile"];
+
+/* =========================
+   1) RENK DİSİPLİNİ (KARMAN ÇORMAN YOK)
+   - Metrik renkle ayrılır: Süre = mavi, Tamamlanma = mor
+   - Tip çizgileri sabit (tüm sayfada aynı)
+========================= */
+const C = {
+  bgGrid: "rgba(255,255,255,.08)",
+  textDim: "rgba(255,255,255,.62)",
+
+  duration: "#60A5FA",     // mavi
+  completion: "#A78BFA",   // mor
+
+  typeFilm: "#3B82F6",
+  typeDizi: "#8B5CF6",
+  typeKisa: "#22C55E",
+  typeAnim: "#F59E0B"
+};
+
+Chart.defaults.color = "rgba(255,255,255,.88)";
+Chart.defaults.borderColor = C.bgGrid;
+Chart.defaults.font.family = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+/* =========================
+   2) YILLARA GÖRE DATA (DEMO)
+   - Hepsi 6–12 aylık stratejik sezgi vermek için özet metrikler.
+   - DB’ye bağlayınca buradaki bloklar API’den gelecek.
+========================= */
+const DATA = {
+  2023: {
+    type: {
+      durationMin: [13.5, 20.2, 6.4, 12.1],
+      completionPct: [60, 73, 82, 68]
+    },
+    genre: {
+      durationMin: [18.2, 22.1, 15.4, 16.3, 17.8, 14.2, 20.1, 16.9, 17.1, 16.0, 14.8, 15.2],
+      completionPct:[66, 64, 78, 67, 70, 75, 72, 69, 68, 66, 71, 73]
+    },
+    varietyScatter: [
+      {x:2, y:14, z:62}, {x:3, y:16, z:64}, {x:4, y:18, z:66},
+      {x:5, y:19, z:67}, {x:6, y:20, z:68}, {x:7, y:21, z:69}
+    ],
+    releaseYearBuckets: ["2020 Öncesi","2021","2022","2023"],
+    releaseShareByType: {
+      film: [28, 26, 25, 21],
+      dizi: [22, 24, 26, 28],
+      kisa: [18, 22, 28, 32],
+      anim: [30, 28, 24, 18]
+    }
+  },
+
+  2024: {
+    type: {
+      durationMin: [14.8, 21.6, 6.9, 12.7],
+      completionPct: [62, 75, 83, 70]
+    },
+    genre: {
+      durationMin: [19.5, 23.0, 16.2, 17.4, 18.6, 15.0, 21.2, 17.7, 17.9, 16.8, 15.5, 16.1],
+      completionPct:[67, 66, 79, 69, 71, 76, 73, 70, 69, 67, 72, 74]
+    },
+    varietyScatter: [
+      {x:2, y:14.5, z:63}, {x:3, y:16.8, z:65}, {x:4, y:18.6, z:67},
+      {x:5, y:19.8, z:68}, {x:6, y:21.0, z:70}, {x:7, y:21.8, z:71}
+    ],
+    releaseYearBuckets: ["2020 Öncesi","2021","2022","2023","2024"],
+    releaseShareByType: {
+      film: [24, 22, 21, 18, 15],
+      dizi: [18, 19, 21, 22, 20],
+      kisa: [12, 14, 18, 26, 30],
+      anim: [26, 25, 22, 17, 10]
+    }
+  },
+
+  2025: {
+    type: {
+      durationMin: [15.6, 22.4, 7.2, 13.2],
+      completionPct: [63, 76, 84, 71]
+    },
+    genre: {
+      durationMin: [20.1, 23.6, 16.9, 18.1, 19.2, 15.4, 21.8, 18.2, 18.3, 17.4, 16.0, 16.6],
+      completionPct:[68, 67, 80, 70, 72, 77, 74, 71, 70, 68, 73, 75]
+    },
+    varietyScatter: [
+      {x:2, y:15.0, z:64}, {x:3, y:17.2, z:66}, {x:4, y:19.0, z:68},
+      {x:5, y:20.3, z:70}, {x:6, y:21.6, z:72}, {x:7, y:22.4, z:73}
+    ],
+    releaseYearBuckets: ["2020 Öncesi","2021","2022","2023","2024","2025"],
+    releaseShareByType: {
+      film: [20, 18, 17, 16, 15, 14],
+      dizi: [16, 17, 18, 19, 20, 18],
+      kisa: [10, 12, 14, 18, 22, 24],
+      anim: [24, 22, 20, 18, 12, 8]
+    }
+  }
+};
+
+function mergeAllYears() {
+  const years = [2023, 2024, 2025];
+  const avg = (arrs) => arrs[0].map((_,i)=> +(arrs.reduce((a,x)=>a+x[i],0)/arrs.length).toFixed(1));
+
+  const typeDuration = avg(years.map(y=>DATA[y].type.durationMin));
+  const typeCompletion = avg(years.map(y=>DATA[y].type.completionPct));
+
+  const genreDuration = avg(years.map(y=>DATA[y].genre.durationMin));
+  const genreCompletion = avg(years.map(y=>DATA[y].genre.completionPct));
+
+  const scatter = DATA[2024].varietyScatter; // görsel demo için ortadaki yıl
+
+  // release year bucket birleşimi: en geniş 2025’i referans
+  const buckets = DATA[2025].releaseYearBuckets;
+  const padTo = (arr, n) => {
+    const x = arr.slice();
+    while (x.length < n) x.push(0);
+    return x;
+  };
+
+  const film = avg(years.map(y=>padTo(DATA[y].releaseShareByType.film, buckets.length)));
+  const dizi = avg(years.map(y=>padTo(DATA[y].releaseShareByType.dizi, buckets.length)));
+  const kisa = avg(years.map(y=>padTo(DATA[y].releaseShareByType.kisa, buckets.length)));
+  const anim = avg(years.map(y=>padTo(DATA[y].releaseShareByType.anim, buckets.length)));
+
+  return {
+    type: { durationMin: typeDuration, completionPct: typeCompletion },
+    genre: { durationMin: genreDuration, completionPct: genreCompletion },
+    varietyScatter: scatter,
+    releaseYearBuckets: buckets,
+    releaseShareByType: { film, dizi, kisa, anim }
+  };
+}
+
+/* =========================
+   3) ORTAK CHART OPTIONS
+========================= */
+const baseOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { position: "top" },
+    tooltip: { enabled: true }
+  },
+  scales: {
+    x: { grid: { color: C.bgGrid }, ticks: { color: C.textDim } },
+    y: { grid: { color: C.bgGrid }, ticks: { color: C.textDim } }
+  }
+};
+
+/* =========================
+   4) KPI HESAPLARI (stratejik)
+   - “en iyi tip/tür”: süre (dk) + tamamlanma(%) normalize basit skor
+========================= */
+function bestLabel(labels, durationArr, completionArr) {
+  const maxDur = Math.max(...durationArr);
+  const maxComp = Math.max(...completionArr);
+  let bestI = 0;
+  let bestScore = -Infinity;
+
+  labels.forEach((lbl, i) => {
+    const d = durationArr[i] / maxDur;      // 0..1
+    const c = completionArr[i] / maxComp;  // 0..1
+    const score = (d * 0.55) + (c * 0.45); // ağırlık: süre biraz daha önemli
+    if (score > bestScore) { bestScore = score; bestI = i; }
+  });
+
+  return { label: labels[bestI], score: bestScore };
+}
+
+function updateKpis(state) {
+  const bt = bestLabel(TYPES, state.type.durationMin, state.type.completionPct);
+  const bg = bestLabel(GENRES, state.genre.durationMin, state.genre.completionPct);
+
+  document.getElementById("kpiBestType").textContent = bt.label;
+  document.getElementById("kpiBestTypeSub").textContent = `Skor: ${(bt.score*100).toFixed(0)}/100`;
+
+  document.getElementById("kpiBestGenre").textContent = bg.label;
+  document.getElementById("kpiBestGenreSub").textContent = `Skor: ${(bg.score*100).toFixed(0)}/100`;
+
+  // katalog yaş trendi: son bucket’larda (daha yeni) pay yüksekse “Yeni ağırlıklı”
+  const buckets = state.releaseYearBuckets;
+  const lastIdx = buckets.length - 1;
+  const newShare =
+    (state.releaseShareByType.film[lastIdx] +
+     state.releaseShareByType.dizi[lastIdx] +
+     state.releaseShareByType.kisa[lastIdx] +
+     state.releaseShareByType.anim[lastIdx]) / 4;
+
+  const oldShare =
+    (state.releaseShareByType.film[0] +
+     state.releaseShareByType.dizi[0] +
+     state.releaseShareByType.kisa[0] +
+     state.releaseShareByType.anim[0]) / 4;
+
+  const trend = (newShare > oldShare) ? "Yeni ağırlıklı" : "Klasik ağırlıklı";
+  document.getElementById("kpiCatalogTrend").textContent = trend;
+
+  // çeşitlilik etkisi: scatter noktalarındaki x artınca y artıyor mu (basit fark)
+  const pts = state.varietyScatter;
+  const first = pts[0].y, last = pts[pts.length-1].y;
+  const delta = last - first;
+  document.getElementById("kpiVariety").textContent = (delta >= 0) ? `+${delta.toFixed(1)} dk` : `${delta.toFixed(1)} dk`;
+}
+
+/* =========================
+   5) CHART INSTANCE’LAR
+========================= */
+let activeYear = "all";
+
+let chartTypeCombo;
+let chartGenreHorizontal;
+let chartVarietyScatter;
+let chartReleaseYearLine;
+
+function destroyCharts() {
+  [chartTypeCombo, chartGenreHorizontal, chartVarietyScatter, chartReleaseYearLine].forEach(ch => ch && ch.destroy());
+}
+
+/* =========================
+   6) BUILD CHARTS (farklı tipler)
+========================= */
+function buildCharts(state) {
+  destroyCharts();
+
+  // 1) TYPE COMBO (BAR + LINE)  ✅ farklı tip
+  chartTypeCombo = new Chart(document.getElementById("chartTypeCombo"), {
+    data: {
+      labels: TYPES,
+      datasets: [
+        {
+          type: "bar",
+          label: "Ort. İzlenme Süresi (dk)",
+          data: state.type.durationMin,
+          backgroundColor: C.duration,
+          borderRadius: 12,
+          barThickness: 26
+        },
+        {
+          type: "line",
+          label: "Tamamlanma (%)",
+          data: state.type.completionPct,
+          borderColor: C.completion,
+          backgroundColor: "rgba(167,139,250,.18)",
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.35,
+          yAxisID: "y1"
+        }
+      ]
+    },
+    options: {
+      ...baseOptions,
+      scales: {
+        x: { grid: { color: C.bgGrid }, ticks: { color: C.textDim } },
+        y: {
+          grid: { color: C.bgGrid },
+          ticks: { color: C.textDim },
+          title: { display: true, text: "Süre (dk)" },
+          beginAtZero: true
+        },
+        y1: {
+          position: "right",
+          grid: { drawOnChartArea: false },
+          ticks: { color: C.textDim, callback: (v)=> v + "%" },
+          title: { display: true, text: "Tamamlanma (%)" },
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  });
+
+  // 2) GENRE HORIZONTAL BAR (dual metric) ✅ okuması kolay
+  chartGenreHorizontal = new Chart(document.getElementById("chartGenreHorizontal"), {
+    type: "bar",
+    data: {
+      labels: GENRES,
+      datasets: [
+        {
+          label: "Ort. İzlenme Süresi (dk)",
+          data: state.genre.durationMin,
+          backgroundColor: "rgba(96,165,250,.95)",
+          borderRadius: 10,
+          barThickness: 16
+        },
+        {
+          label: "Tamamlanma (%)",
+          data: state.genre.completionPct,
+          backgroundColor: "rgba(167,139,250,.92)",
+          borderRadius: 10,
+          barThickness: 16
+        }
+      ]
+    },
+    options: {
+      ...baseOptions,
+      indexAxis: "y",
+      plugins: {
+        ...baseOptions.plugins,
+        legend: { position: "top" }
+      },
+      scales: {
+        x: {
+          grid: { color: C.bgGrid },
+          ticks: { color: C.textDim },
+          beginAtZero: true
+        },
+        y: {
+          grid: { color: "rgba(255,255,255,.04)" },
+          ticks: { color: C.textDim }
+        }
+      }
+    }
+  });
+
+  // 3) SCATTER (variety effect) ✅ farklı tip
+  chartVarietyScatter = new Chart(document.getElementById("chartVarietyScatter"), {
+    type: "scatter",
+    data: {
+      datasets: [{
+        label: "Nokta: (Tür sayısı, ort. süre) • Balon büyüklüğü: tamamlanma",
+        data: state.varietyScatter.map(p => ({ x: p.x, y: p.y, r: Math.max(5, (p.z-55)/2) })),
+        pointRadius: (ctx) => ctx.raw.r,
+        pointHoverRadius: (ctx) => ctx.raw.r + 2,
+        backgroundColor: "rgba(34,197,94,.70)",
+        borderColor: "rgba(34,197,94,.95)"
+      }]
+    },
+    options: {
+      ...baseOptions,
+      plugins: {
+        ...baseOptions.plugins,
+        legend: { position: "top" },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const r = ctx.raw.r;
+              // r -> z yaklaşık geri dönüş (demo)
+              return `Tür sayısı: ${ctx.raw.x} • Süre: ${ctx.raw.y} dk • (Tamamlanma proxy)`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: C.bgGrid },
+          ticks: { color: C.textDim, stepSize: 1 },
+          title: { display: true, text: "İzlenen tür sayısı (kullanıcı başına)" },
+          beginAtZero: true
+        },
+        y: {
+          grid: { color: C.bgGrid },
+          ticks: { color: C.textDim },
+          title: { display: true, text: "Ort. İzlenme Süresi (dk)" },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // 4) RELEASE YEAR LINE (type lines) ✅ farklı tip
+  chartReleaseYearLine = new Chart(document.getElementById("chartReleaseYearLine"), {
+    type: "line",
+    data: {
+      labels: state.releaseYearBuckets,
+      datasets: [
+        {
+          label: "Film",
+          data: state.releaseShareByType.film,
+          borderColor: C.typeFilm,
+          backgroundColor: "rgba(59,130,246,.14)",
+          tension: 0.35,
+          pointRadius: 3,
+          fill: false
+        },
+        {
+          label: "Dizi",
+          data: state.releaseShareByType.dizi,
+          borderColor: C.typeDizi,
+          backgroundColor: "rgba(139,92,246,.14)",
+          tension: 0.35,
+          pointRadius: 3,
+          fill: false
+        },
+        {
+          label: "Kısa İçerik",
+          data: state.releaseShareByType.kisa,
+          borderColor: C.typeKisa,
+          backgroundColor: "rgba(34,197,94,.14)",
+          tension: 0.35,
+          pointRadius: 3,
+          fill: false
+        },
+        {
+          label: "Animasyon",
+          data: state.releaseShareByType.anim,
+          borderColor: C.typeAnim,
+          backgroundColor: "rgba(245,158,11,.14)",
+          tension: 0.35,
+          pointRadius: 3,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      ...baseOptions,
+      scales: {
+        x: { grid: { color: C.bgGrid }, ticks: { color: C.textDim } },
+        y: {
+          grid: { color: C.bgGrid },
+          ticks: { color: C.textDim, callback: (v)=> v + "%" },
+          title: { display: true, text: "İzlenme Payı (%)" },
+          beginAtZero: true,
+          suggestedMax: 40
+        }
+      }
+    }
+  });
+}
+
+/* =========================
+   7) STATE / FILTER
+========================= */
+function getStateByYear(y) {
+  if (y === "all") return mergeAllYears();
+  return DATA[y];
+}
+
+function refreshAll() {
+  const state = getStateByYear(activeYear);
+  updateKpis(state);
+  buildCharts(state);
+}
+
+/* =========================
+   8) EVENTS (Year buttons)
+========================= */
+document.querySelectorAll(".seg-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeYear = btn.dataset.year;
+    refreshAll();
+  });
+});
+
+/* INIT */
+refreshAll();
+</script>
+
+</body>
+</html>

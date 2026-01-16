@@ -1,0 +1,849 @@
+<!-- index.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KDS Dashboard • Genel Bakış</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div>
+          <div class="brand-title">KDS Dashboard</div>
+          <div class="brand-sub">Film Platform Analitiği</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+  <a class="nav-item active" href="anapanel.html">
+    <span>Genel Bakış</span>
+  </a>
+
+  <a class="nav-item" href="behavior.html">
+    <span>Kullanıcı-İçerik Analizi</span>
+  </a> 
+
+  <a class="nav-item" href="seasonality.html">
+    <span>Trend Analizleri</span>
+  </a>
+</nav>
+
+
+      <div class="sidebar-foot">
+        <div class="pill">6–12 ay stratejik karar desteği</div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <h1>Genel Bakış</h1>
+          <p>Paket Performansı & Gelir Optimizasyonu</p>
+        </div>
+
+        <div class="header-actions">
+          <div class="segmented" role="tablist" aria-label="Yıl filtresi">
+            <button class="seg-btn active" data-year="all" type="button">Tümü</button>
+            <button class="seg-btn" data-year="2023" type="button">2023</button>
+            <button class="seg-btn" data-year="2024" type="button">2024</button>
+            <button class="seg-btn" data-year="2025" type="button">2025</button>
+          </div> 
+      </header>
+
+      <!-- KPI -->
+      <section class="kpi-grid">
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Toplam Ciro</div>
+            <div class="kpi-badge">₺</div>
+          </div>
+          <div class="kpi-value" id="kpiRevenue">₺0</div>
+          <div class="kpi-foot" id="kpiRevenueSub">—</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Premium Pay</div>
+            <div class="kpi-badge">%</div>
+          </div>
+          <div class="kpi-value" id="kpiPremiumShare">0%</div>
+          <div class="kpi-foot">Toplam aboneler içinde</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">ARPU</div>
+            <div class="kpi-badge">₺</div>
+          </div>
+          <div class="kpi-value" id="kpiArpu">₺0</div>
+          <div class="kpi-foot">Ortalama kullanıcı geliri</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Churn</div>
+            <div class="kpi-badge">%</div>
+          </div>
+          <div class="kpi-value" id="kpiChurn">0%</div>
+          <div class="kpi-foot">Aylık ortalama</div>
+        </div>
+      </section>
+
+      <!-- CHART ROW -->
+      <section class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <h2>Aylık Paket Bazlı Gelir</h2>
+            <div class="hint">Premium / Standart / Öğrenci</div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="chartRevenueByPackage"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Toplam Gelir Trendi</h2>
+            <div class="hint">Aylık toplam</div>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="chartTotalRevenue"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOTTOM CHARTS -->
+      <section class="grid-3">
+        <div class="card">
+          <div class="card-head">
+            <h2>Paket Dağılımı</h2>
+            <div class="hint">Abone payları</div>
+          </div>
+          <div class="chart-wrap mid">
+            <canvas id="chartPackageDistribution"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Segment Performansı</h2>
+            <div class="hint">Öğrenci / Standart / Premium</div>
+          </div>
+          <div class="chart-wrap mid">
+            <canvas id="chartSegmentRadar"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>İzlenme Trendi</h2>
+            <div class="hint">6–12 ay (trend)</div>
+          </div>
+          <div class="chart-wrap mid">
+            <canvas id="chartViewingIntensity"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIMULATOR -->
+      <section class="card simulator">
+        <div class="card-head">
+          <h2>Fiyatlandırma & Paket Geçiş Simülatörü</h2>
+          <div class="hint">Parametreyi değiştir → KPI’lar ve tahminler güncellenir</div>
+        </div>
+
+        <div class="sim-grid">
+          <div class="sim-left">
+            <div class="slider">
+              <div class="slider-row">
+                <label for="priceIncrease">Paket Zam (%)</label>
+                <span class="slider-val" id="priceIncreaseVal">8%</span>
+              </div>
+              <input id="priceIncrease" type="range" min="0" max="25" step="1" value="8" />
+              <div class="slider-hint">Tüm paket fiyatlarına aynı oranda uygulanır.</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="transition-title">Paket Geçişleri (%)</div>
+            <div class="transition-grid">
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_std_prem">Standart → Premium</label>
+                  <span class="slider-val" id="t_std_prem_val">6%</span>
+                </div>
+                <input id="t_std_prem" type="range" min="0" max="20" step="1" value="6" />
+              </div>
+
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_std_stu">Standart → Öğrenci</label>
+                  <span class="slider-val" id="t_std_stu_val">2%</span>
+                </div>
+                <input id="t_std_stu" type="range" min="0" max="15" step="1" value="2" />
+              </div>
+
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_stu_std">Öğrenci → Standart</label>
+                  <span class="slider-val" id="t_stu_std_val">7%</span>
+                </div>
+                <input id="t_stu_std" type="range" min="0" max="25" step="1" value="7" />
+              </div>
+
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_stu_prem">Öğrenci → Premium</label>
+                  <span class="slider-val" id="t_stu_prem_val">3%</span>
+                </div>
+                <input id="t_stu_prem" type="range" min="0" max="15" step="1" value="3" />
+              </div>
+
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_prem_std">Premium → Standart</label>
+                  <span class="slider-val" id="t_prem_std_val">4%</span>
+                </div>
+                <input id="t_prem_std" type="range" min="0" max="20" step="1" value="4" />
+              </div>
+
+              <div class="slider small">
+                <div class="slider-row">
+                  <label for="t_prem_stu">Premium → Öğrenci</label>
+                  <span class="slider-val" id="t_prem_stu_val">1%</span>
+                </div>
+                <input id="t_prem_stu" type="range" min="0" max="10" step="1" value="1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="sim-right">
+            <div class="sim-kpi">
+              <div class="sim-label">Tahmini Ciro</div>
+              <div class="sim-value" id="simRevenue">₺0</div>
+              <div class="sim-sub" id="simRevenueDelta">—</div>
+            </div>
+
+            <div class="sim-kpi">
+              <div class="sim-label">Tahmini İzlenme</div>
+              <div class="sim-value" id="simWatch">+0.0%</div>
+              <div class="sim-sub">Paket karması + fiyat etkisi</div>
+            </div>
+
+            <div class="sim-kpi">
+              <div class="sim-label">Tahmini Churn</div>
+              <div class="sim-value" id="simChurn">0.0%</div>
+              <div class="sim-sub">Fiyat artışı hassasiyetiyle</div>
+            </div>
+
+            <div class="mini-note">
+              Not: Bu simülasyon “yönetici seviyesinde” hızlı karar desteği için sadeleştirilmiş tahmin modelidir.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ---------- Helpers ----------
+    const months = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+    const fmtTRY = (n) => "₺" + Math.round(n).toLocaleString("tr-TR");
+
+    // Colors (consistent)
+    const C = {
+      premium: "#8B5CF6",
+      standard: "#3B82F6",
+      student: "#22C55E",
+      total: "#F59E0B",
+      grid: "rgba(255,255,255,.08)",
+      text: "rgba(255,255,255,.88)",
+      textDim: "rgba(255,255,255,.62)"
+    };
+
+    // ✅ EKLENDİ: ay seçimi state
+    let activeMonth = "all";
+
+    // ✅ EKLENDİ: 6 ay pencere (seçilen aya göre), "12 Ay" seçilirse full 12
+    function getWindowIndices() {
+      if (activeMonth === "all") return Array.from({length: 12}, (_,i)=>i);
+
+      const m = +activeMonth; // 0..11
+      const idx = [];
+      for (let k = 5; k >= 0; k--) {
+        idx.push((m - k + 12) % 12);
+      }
+      return idx; // 6 ay
+    }
+
+    // ✅ EKLENDİ: state içinden pencere slice’ı üret (bar/line/trend için)
+    function applyWindow(state) {
+      const idx = getWindowIndices();
+      const labels = idx.map(i => months[i]);
+
+      const pick = (arr) => idx.map(i => arr[i]);
+
+      return {
+        labels,
+        revenueByPackage: {
+          premium: pick(state.revenueByPackage.premium),
+          standard: pick(state.revenueByPackage.standard),
+          student: pick(state.revenueByPackage.student)
+        },
+        subs: state.subs,
+        churn: state.churn,
+        arpu: state.arpu,
+        segment: state.segment
+      };
+    }
+
+    // ---------- Data (demo, senin DB'ye bağlayınca burası API'den gelecek) ----------
+    const DATA = {
+      2023: {
+        revenueByPackage: {
+          premium: [28,29,30,31,32,34,35,36,34,33,32,36],
+          standard:[22,23,24,25,26,27,28,29,28,27,26,28],
+          student: [10,10,11,11,12,12,13,13,12,11,11,12],
+        },
+        subs: { premium: 92, standard: 78, student: 30 },
+        churn: 4.6,
+        arpu: 132,
+        segment: {A:72, B:61, C:48},
+        intensity: { morning: 18, noon: 22, evening: 38, night: 26 }
+      },
+      2024: {
+        revenueByPackage: {
+          premium: [33,35,37,39,41,44,47,50,46,44,43,55],
+          standard:[25,26,28,29,30,31,32,33,31,30,29,32],
+          student: [12,13,14,15,15,16,17,18,16,15,14,15],
+        },
+        subs: { premium: 108, standard: 74, student: 28 },
+        churn: 4.2,
+        arpu: 148,
+        segment: {A:78, B:66, C:52},
+        intensity: { morning: 20, noon: 24, evening: 42, night: 28 }
+      },
+      2025: {
+        revenueByPackage: {
+          premium: [38,40,42,44,46,49,52,56,53,50,48,60],
+          standard:[26,27,29,31,32,33,34,35,34,33,31,34],
+          student: [11,12,13,14,14,15,16,17,15,14,13,14],
+        },
+        subs: { premium: 120, standard: 70, student: 25 },
+        churn: 3.9,
+        arpu: 156,
+        segment: {A:82, B:69, C:54},
+        intensity: { morning: 21, noon: 25, evening: 45, night: 30 }
+      }
+    };
+
+    function mergeAllYears() {
+      const years = [2023,2024,2025];
+      const sumArr = (key) => months.map((_,i)=> years.reduce((acc,y)=>acc + DATA[y].revenueByPackage[key][i],0));
+      const all = {
+        revenueByPackage: {
+          premium: sumArr("premium"),
+          standard: sumArr("standard"),
+          student: sumArr("student")
+        },
+        subs: years.reduce((acc,y)=>({
+          premium: acc.premium + DATA[y].subs.premium,
+          standard: acc.standard + DATA[y].subs.standard,
+          student: acc.student + DATA[y].subs.student
+        }), {premium:0,standard:0,student:0}),
+        churn: +(years.reduce((a,y)=>a+DATA[y].churn,0)/years.length).toFixed(1),
+        arpu: Math.round(years.reduce((a,y)=>a+DATA[y].arpu,0)/years.length),
+        segment: {
+          A: Math.round(years.reduce((a,y)=>a+DATA[y].segment.A,0)/years.length),
+          B: Math.round(years.reduce((a,y)=>a+DATA[y].segment.B,0)/years.length),
+          C: Math.round(years.reduce((a,y)=>a+DATA[y].segment.C,0)/years.length),
+        },
+        intensity: {
+          morning: Math.round(years.reduce((a,y)=>a+DATA[y].intensity.morning,0)/years.length),
+          noon: Math.round(years.reduce((a,y)=>a+DATA[y].intensity.noon,0)/years.length),
+          evening: Math.round(years.reduce((a,y)=>a+DATA[y].intensity.evening,0)/years.length),
+          night: Math.round(years.reduce((a,y)=>a+DATA[y].intensity.night,0)/years.length),
+        }
+      };
+      return all;
+    }
+
+    // ---------- Chart Defaults ----------
+    Chart.defaults.color = C.text;
+    Chart.defaults.borderColor = C.grid;
+    Chart.defaults.font.family = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top", labels: { color: C.text } },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { color: C.textDim } },
+        y: { grid: { color: C.grid }, ticks: { color: C.textDim }, beginAtZero: true }
+      }
+    };
+
+  // ---------- Create Charts ----------
+const ctxPkg = document.getElementById("chartRevenueByPackage");
+const ctxTotal = document.getElementById("chartTotalRevenue");
+const ctxDist = document.getElementById("chartPackageDistribution");
+const ctxRadar = document.getElementById("chartSegmentRadar");
+const ctxIntensity = document.getElementById("chartViewingIntensity");
+
+let chartRevenueByPackage = null;
+let chartTotalRevenue = null;
+
+// ---------- BACKEND'DEN AYLIK PAKET GELİRİ ----------
+async function loadRevenueByPackage(year) {
+  const res = await fetch(
+    `http://localhost:3000/api/dashboard/revenue-by-package?year=${year}`
+  );
+  return await res.json();
+}
+
+async function buildRevenueByPackageChart(year) {
+  const data = await loadRevenueByPackage(year);
+
+  if (chartRevenueByPackage) {
+    chartRevenueByPackage.destroy();
+  }
+
+  chartRevenueByPackage = new Chart(ctxPkg, {
+    type: "bar",
+    data: {
+      labels: data.labels,
+      datasets: [
+        {
+          label: "Premium",
+          data: data.premium,
+          backgroundColor: C.premium,
+          borderRadius: 10
+        },
+        {
+          label: "Standart",
+          data: data.standart,
+          backgroundColor: C.standard,
+          borderRadius: 10
+        },
+        {
+          label: "Öğrenci",
+          data: data.ogrenci,
+          backgroundColor: C.student,
+          borderRadius: 10
+        }
+      ]
+    },
+    options: baseOptions
+  });
+}
+
+    //aylık paket bazlı gelir çalışır durumda
+function buildRevenueByPackageChartFromState(state) {
+  if (chartRevenueByPackage) chartRevenueByPackage.destroy();
+
+  chartRevenueByPackage = new Chart(ctxPkg, {
+    type: "bar",
+    data: {
+      labels: state.labels,
+      datasets: [
+        {
+          label: "Premium",
+          data: state.revenueByPackage.premium,
+          backgroundColor: C.premium,
+          borderRadius: 10
+        },
+        {
+          label: "Standart",
+          data: state.revenueByPackage.standard,
+          backgroundColor: C.standard,
+          borderRadius: 10
+        },
+        {
+          label: "Öğrenci",
+          data: state.revenueByPackage.student,
+          backgroundColor: C.student,
+          borderRadius: 10
+        }
+      ]
+    },
+    options: baseOptions
+  });
+}
+
+//toplam gelir trendi çalışır durumda
+function buildTotalRevenueChartFromState(state) {
+  if (chartTotalRevenue) chartTotalRevenue.destroy();
+
+  const total = state.labels.map((_, i) =>
+    state.revenueByPackage.premium[i] +
+    state.revenueByPackage.standard[i] +
+    state.revenueByPackage.student[i]
+  );
+
+  chartTotalRevenue = new Chart(ctxTotal, {
+    type: "line",
+    data: {
+      labels: state.labels,
+      datasets: [{
+        label: "Toplam Gelir",
+        data: total,
+        borderColor: C.total,
+        backgroundColor: "rgba(245,158,11,.18)",
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: baseOptions
+  });
+}
+
+
+//paket dağılımı
+function buildPackageDistributionChart(stateRaw) {
+  if (window.chartPackageDistribution instanceof Chart) {
+    window.chartPackageDistribution.destroy();
+  }
+
+  window.chartPackageDistribution = new Chart(
+    document.getElementById("chartPackageDistribution"),
+    {
+      type: "doughnut",
+      data: {
+        labels: ["Premium", "Standart", "Öğrenci"],
+        datasets: [{
+          data: [
+            stateRaw.subs.premium,
+            stateRaw.subs.standard,
+            stateRaw.subs.student
+          ],
+          backgroundColor: [C.premium, C.standard, C.student],
+          borderWidth: 2,
+          hoverOffset: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          legend: { position: "top" }
+        }
+      }
+    }
+  );
+}
+
+
+
+
+//segment radar chart
+function buildSegmentRadarChart(stateRaw) {
+  if (window.chartSegmentRadar instanceof Chart) {
+    window.chartSegmentRadar.destroy();
+  }
+
+  window.chartSegmentRadar = new Chart(
+    document.getElementById("chartSegmentRadar"),
+    {
+      type: "radar",
+      data: {
+        labels: ["Tutundurma","İzlenme","Dönüşüm","Memnuniyet","Bağlılık"],
+        datasets: [
+          {
+            label: "Öğrenci",
+            data: [
+              stateRaw.segment.A,
+              stateRaw.segment.A - 8,
+              stateRaw.segment.A - 12,
+              stateRaw.segment.A - 5,
+              stateRaw.segment.A - 10
+            ],
+            borderColor: C.student,
+            backgroundColor: "rgba(34,197,94,.15)"
+          },
+          {
+            label: "Standart",
+            data: [
+              stateRaw.segment.B,
+              stateRaw.segment.B - 6,
+              stateRaw.segment.B - 10,
+              stateRaw.segment.B - 4,
+              stateRaw.segment.B - 8
+            ],
+            borderColor: C.standard,
+            backgroundColor: "rgba(59,130,246,.15)"
+          },
+          {
+            label: "Premium",
+            data: [
+              stateRaw.segment.C,
+              stateRaw.segment.C - 5,
+              stateRaw.segment.C - 9,
+              stateRaw.segment.C - 3,
+              stateRaw.segment.C - 7
+            ],
+            borderColor: C.premium,
+            backgroundColor: "rgba(139,92,246,.18)"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            beginAtZero: true,
+            suggestedMax: 100,
+            grid: { color: C.grid },
+            angleLines: { color: C.grid },
+            pointLabels: { color: C.textDim },
+            ticks: { display: false }
+          }
+        }
+      }
+    }
+  );
+}
+
+//izlenme trendi chart
+
+function buildViewingIntensityChart(state) {
+  if (window.chartViewingIntensity instanceof Chart) {
+    window.chartViewingIntensity.destroy();
+  }
+
+  const watchTrend = state.labels.map((_, i) =>
+    (state.revenueByPackage.premium[i] * 1.25) +
+    (state.revenueByPackage.standard[i] * 1.0) +
+    (state.revenueByPackage.student[i] * 0.85)
+  );
+
+  window.chartViewingIntensity = new Chart(
+    document.getElementById("chartViewingIntensity"),
+    {
+      type: "line",
+      data: {
+        labels: state.labels,
+        datasets: [{
+          label: "İzlenme Trendi",
+          data: watchTrend,
+          borderColor: C.premium,
+          backgroundColor: "rgba(139,92,246,.16)",
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3
+        }]
+      },
+      options: baseOptions
+    }
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ---------- KPI + Simulator ----------
+    function calcBaseTotals(stateRaw) {
+      const state = applyWindow(stateRaw); // ✅ KPI da 6/12 ay pencere
+      const total = state.labels.reduce((acc,_,i)=>(
+        acc + state.revenueByPackage.premium[i] + state.revenueByPackage.standard[i] + state.revenueByPackage.student[i]
+      ), 0);
+
+      const scale = 1000;
+      return total * scale;
+    }
+
+    function updateKpis(stateRaw) {
+      const totalRevenue = calcBaseTotals(stateRaw);
+      const subsTotal = stateRaw.subs.premium + stateRaw.subs.standard + stateRaw.subs.student;
+      const premiumShare = subsTotal ? (stateRaw.subs.premium / subsTotal) * 100 : 0;
+
+      const periodLabel = (activeMonth === "all") ? "12 ay" : "son 6 ay";
+
+      document.getElementById("kpiRevenue").textContent = fmtTRY(totalRevenue);
+      document.getElementById("kpiRevenueSub").textContent = `${subsTotal} abone • ${periodLabel} toplam (demo)`;
+      document.getElementById("kpiPremiumShare").textContent = premiumShare.toFixed(1) + "%";
+      document.getElementById("kpiArpu").textContent = "₺" + stateRaw.arpu.toLocaleString("tr-TR");
+      document.getElementById("kpiChurn").textContent = stateRaw.churn.toFixed(1) + "%";
+    }
+
+    function readSimParams() {
+      const g = (id) => +document.getElementById(id).value;
+      return {
+        priceIncrease: g("priceIncrease"),
+        t_std_prem: g("t_std_prem"),
+        t_std_stu:  g("t_std_stu"),
+        t_stu_std:  g("t_stu_std"),
+        t_stu_prem: g("t_stu_prem"),
+        t_prem_std: g("t_prem_std"),
+        t_prem_stu: g("t_prem_stu"),
+      };
+    }
+
+    function setSliderLabels() {
+      const map = [
+        ["priceIncrease","priceIncreaseVal"],
+        ["t_std_prem","t_std_prem_val"],
+        ["t_std_stu","t_std_stu_val"],
+        ["t_stu_std","t_stu_std_val"],
+        ["t_stu_prem","t_stu_prem_val"],
+        ["t_prem_std","t_prem_std_val"],
+        ["t_prem_stu","t_prem_stu_val"]
+      ];
+      map.forEach(([id, out]) => {
+        const v = document.getElementById(id).value;
+        document.getElementById(out).textContent = v + "%";
+      });
+    }
+
+    function runSimulation(baseState) {
+      const p = readSimParams();
+      const baseRevenue = calcBaseTotals(baseState);
+
+      const price = { premium: 189, standard: 129, student: 79 };
+      const priceAfter = {
+        premium: price.premium * (1 + p.priceIncrease/100),
+        standard: price.standard * (1 + p.priceIncrease/100),
+        student: price.student * (1 + p.priceIncrease/100),
+      };
+
+      let prem = baseState.subs.premium;
+      let std  = baseState.subs.standard;
+      let stu  = baseState.subs.student;
+
+      const move = (from, to, pct) => Math.round(from * (pct/100));
+
+      const stdToPrem = move(std, prem, p.t_std_prem);
+      const stdToStu  = move(std - stdToPrem, stu, p.t_std_stu);
+
+      const stuToStd  = move(stu, std, p.t_stu_std);
+      const stuToPrem = move(stu - stuToStd, prem, p.t_stu_prem);
+
+      const premToStd = move(prem, std, p.t_prem_std);
+      const premToStu = move(prem - premToStd, stu, p.t_prem_stu);
+
+      std = std - stdToPrem - stdToStu + stuToStd + premToStd;
+      stu = stu - stuToStd - stuToPrem + stdToStu + premToStu;
+      prem = prem - premToStd - premToStu + stdToPrem + stuToPrem;
+
+      prem = Math.max(0, prem);
+      std  = Math.max(0, std);
+      stu  = Math.max(0, stu);
+
+      const subsTotal = prem + std + stu;
+
+      const monthlyRevenueAfter = (prem * priceAfter.premium) + (std * priceAfter.standard) + (stu * priceAfter.student);
+      const annualRevenueAfter = monthlyRevenueAfter * 12;
+
+      const premShare = subsTotal ? prem/subsTotal : 0;
+      const watchImpact = (premShare * 12) - (p.priceIncrease * 0.10) + (p.t_std_prem*0.05) - (p.t_prem_std*0.06);
+      const watchPct = Math.max(-12, Math.min(18, watchImpact));
+
+      const churnAfter = baseState.churn + (p.priceIncrease * 0.07) + (p.t_prem_std * 0.03) + (p.t_std_stu * 0.02);
+      const churnClamped = Math.max(1.5, Math.min(9.0, churnAfter));
+
+      document.getElementById("simRevenue").textContent = fmtTRY(annualRevenueAfter);
+      const delta = ((annualRevenueAfter - baseRevenue) / baseRevenue) * 100;
+      document.getElementById("simRevenueDelta").textContent = `Baz senaryoya göre ${delta>=0?"+":""}${delta.toFixed(1)}%`;
+
+      document.getElementById("simWatch").textContent = `${watchPct>=0?"+":""}${watchPct.toFixed(1)}%`;
+      document.getElementById("simChurn").textContent = `${churnClamped.toFixed(1)}%`;
+    }
+
+    // ---------- State / Filtering ----------
+    let activeYear = "all";
+
+    function getStateByYear(yearKey) {
+      if (yearKey === "all") return mergeAllYears();
+      return DATA[yearKey];
+    }
+
+   function refreshAll() {
+  // ham state (yıl bazlı)
+  const stateRaw = getStateByYear(activeYear);
+
+
+  // KPI + simülasyon (BUNLAR ÇALIŞIYORDU, ELLEMEDİK)
+  updateKpis(stateRaw);
+  setSliderLabels();
+  runSimulation(stateRaw);
+
+  // grafikler için pencere uygulanmış state
+  const state = applyWindow(stateRaw);
+
+  // 🔥 EKSİK OLAN KISIM: GRAFİKLER
+  buildRevenueByPackageChartFromState(state);
+  buildTotalRevenueChartFromState(state);
+  buildPackageDistributionChart(stateRaw);
+  buildSegmentRadarChart(stateRaw);
+  buildViewingIntensityChart(state);
+}
+
+
+    // ---------- Events ----------
+    document.querySelectorAll(".seg-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeYear = btn.dataset.year;
+       // buildRevenueByPackageChart(activeYear);
+        refreshAll();
+      });
+    });
+
+    const sliders = ["priceIncrease","t_std_prem","t_std_stu","t_stu_std","t_stu_prem","t_prem_std","t_prem_stu"];
+    sliders.forEach(id => {
+      document.getElementById(id).addEventListener("input", () => {
+        setSliderLabels();
+        runSimulation(getStateByYear(activeYear));
+      });
+    });
+
+    async function loadMonthlyRevenue(year = "2024") {
+     const res = await fetch(`/api/anapanel/monthly-revenue?year=${year}`);
+     const data = await res.json();
+
+      buildRevenueByPackageChartFromApi(data);
+   buildTotalRevenueChart(data);
+}
+
+    // initial render
+    refreshAll();
+    loadMonthlyRevenue("2024");
+   // buildRevenueByPackageChart(activeYear);
+   /* (async () => {
+  const data2024 = await loadRevenueByPackage(2024);
+  buildRevenueByPackageChart(2024);
+  buildTotalRevenueChart(data2024); 
+})(); */
+  </script>
+</body>
+</html>

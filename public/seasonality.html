@@ -1,0 +1,1009 @@
+<!-- seasonality.html  | Panel 3: Trend Analizleri (KDS / 6–12 ay) -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trend Analizleri • StreamKDS</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Bu panel için ufak layout dokunuşları (style.css'i bozmadan) -->
+  <style>
+    /* aynı tasarım dili, sadece yerleşim iyileştirme */
+    .grid-1 { display:grid; grid-template-columns: 1fr; gap:16px; }
+    .grid-2-eq { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:16px; }
+    .grid-3-eq { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:16px; }
+    .chart-wrap.xl { height: 360px; }
+    .chart-wrap.lg { height: 300px; }
+    .chart-wrap.md { height: 260px; }
+
+    .kpi .kpi-value.big {
+      font-size: 34px;
+      letter-spacing: .2px;
+    }
+
+    .subtle-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+    }
+    .chip{
+      font-size:12px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke2);
+      background: rgba(0,0,0,.16);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .chip b{ color: var(--text); font-weight:800; }
+
+    .sim-wrap{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+      margin-top: 12px;
+    }
+    .sim-panel{
+      background: rgba(0,0,0,.14);
+      border: 1px solid var(--stroke2);
+      border-radius: var(--radius2);
+      padding: 14px;
+    }
+    .sim-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 750;
+    }
+    .field select,
+    .field input{
+      background: rgba(0,0,0,.22);
+      border: 1px solid var(--stroke2);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
+    }
+    .btn{
+      border: 1px solid var(--stroke2);
+      background: rgba(0,0,0,.20);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 750;
+      transition:.15s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.06); }
+    .btn.primary{
+      border-color: rgba(139,92,246,.35);
+      background: rgba(139,92,246,.18);
+    }
+    .sim-results{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .result-card{
+      border: 1px solid var(--stroke2);
+      background: rgba(0,0,0,.18);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .result-title{
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .result-val{
+      margin-top: 8px;
+      font-size: 34px;
+      font-weight: 950;
+      letter-spacing: .2px;
+    }
+    .result-sub{
+      margin-top: 6px;
+      color: var(--muted2);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 1200px){
+      .grid-2-eq{ grid-template-columns: 1fr; }
+      .grid-3-eq{ grid-template-columns: 1fr; }
+      .sim-wrap{ grid-template-columns: 1fr; }
+      .sim-grid{ grid-template-columns: 1fr; }
+      .chart-wrap.xl{ height: 320px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- SIDEBAR (index ile aynı dil) -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div>
+          <div class="brand-title">KDS Dashboard</div>
+          <div class="brand-sub">Film Platform Analitiği</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item" href="anapanel.html">
+          <span>Genel Bakış</span>
+        </a>
+        <a class="nav-item" href="behavior.html">
+          <span>Kullanıcı-İçerik Analizi</span>
+        </a>
+        <a class="nav-item active" href="seasonality.html">
+          <span>Trend Analizleri</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="pill">Sezonsal & Özel Dönem Planlama</div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div>
+          <h1>Trend Analizleri</h1>
+          <p>Özel Dönemler & Sezonsal İçerik Planı</p>
+        </div>
+
+        <div class="header-actions">
+          <div class="segmented" role="tablist" aria-label="Yıl filtresi">
+            <button class="seg-btn active" data-year="all" type="button">Tümü</button>
+            <button class="seg-btn" data-year="2023" type="button">2023</button>
+            <button class="seg-btn" data-year="2024" type="button">2024</button>
+            <button class="seg-btn" data-year="2025" type="button">2025</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- KPI -->
+      <section class="kpi-grid">
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Pik Ay</div>
+            <div class="kpi-badge">📌</div>
+          </div>
+          <div class="kpi-value big" id="kpiPeakMonth">—</div>
+          <div class="kpi-foot" id="kpiPeakMonthSub">—</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Pik–Dip Farkı</div>
+            <div class="kpi-badge">%</div>
+          </div>
+          <div class="kpi-value big" id="kpiPeakDip">—</div>
+          <div class="kpi-foot">Sezonsal oynaklık</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">Özel Dönem Katkısı</div>
+            <div class="kpi-badge">★</div>
+          </div>
+          <div class="kpi-value big" id="kpiSpecialShare">—</div>
+          <div class="kpi-foot">Yaz/Kış/Şubat/Aralık</div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-top">
+            <div class="kpi-label">En Güçlü Dönem Türü</div>
+            <div class="kpi-badge">🎬</div>
+          </div>
+          <div class="kpi-value big" id="kpiTopGenre">—</div>
+          <div class="kpi-foot" id="kpiTopGenreSub">—</div>
+        </div>
+      </section>
+
+      <!-- 1) Aylık trend (senin görseldeki stile yakın) -->
+      <section class="grid-1">
+        <div class="card">
+          <div class="card-head">
+            <h2>Aylık İzlenme Trendi</h2>
+            <div class="hint">Pik aylar işaretli • 6–12 ay stratejik planlama</div>
+          </div>
+
+          <div class="subtle-row" id="peakChips">
+            <!-- JS ile doldurulacak: Pik: Ağustos (Yaz), Şubat (Sevgililer Günü)... -->
+          </div>
+
+          <div class="chart-wrap xl">
+            <canvas id="chartMonthlyTrend"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2) Pik aylar kırılımı: Tip & Tür (yan yana) -->
+      <section class="grid-2-eq">
+        <div class="card">
+          <div class="card-head">
+            <h2>Pik Aylarda İçerik Tipi Kırılımı</h2>
+            <div class="hint">Film / Dizi / Kısa İçerik / Animasyon</div>
+          </div>
+          <div class="chart-wrap lg">
+            <canvas id="chartPeakByType"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Pik Aylarda İçerik Türü Kırılımı</h2>
+            <div class="hint">12 tür • Pik aylarda yatırım sinyali</div>
+          </div>
+          <div class="chart-wrap lg">
+            <canvas id="chartPeakByGenre"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3) Özel dönemler: Tip + Tür aynı anda (yan yana, anlaşılır) -->
+      <section class="grid-1">
+        <div class="card">
+          <div class="card-head">
+            <h2>Özel Dönemlerde Tip & Tür Dağılımı</h2>
+            <div class="hint">Yaz / Kış / Sevgililer Günü / Yılbaşı • Tek bakışta karar</div>
+          </div>
+
+          <div class="header-actions" style="justify-content:flex-start; margin: 4px 0 10px;">
+            <div class="select-wrap">
+              <label class="sr-only" for="specialSelect">Özel dönem</label>
+              <select id="specialSelect">
+                <option value="Sevgililer Günü">Sevgililer Günü</option>
+                <option value="Yaz">Yaz</option>
+                <option value="Kış">Kış</option>
+                <option value="Yılbaşı" selected>Yılbaşı</option>
+              </select>
+            </div>
+          </div>
+
+          <section class="grid-2-eq">
+            <div>
+              <div class="hint" style="margin: 4px 0 10px;">Özel dönem → Tip dağılımı (stacked)</div>
+              <div class="chart-wrap md">
+                <canvas id="chartSpecialTypeStack"></canvas>
+              </div>
+            </div>
+
+            <div>
+              <div class="hint" style="margin: 4px 0 10px;">Seçili dönemde → Tür yoğunluğu (yatay)</div>
+              <div class="chart-wrap md">
+                <canvas id="chartSpecialGenreBar"></canvas>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 4) Simülasyon: dönem + tip + tür + yüzde + adet -->
+      <section class="card simulator">
+        <div class="card-head">
+          <h2>Özel Dönem İçerik Yatırımı Simülatörü</h2>
+          <div class="hint">Seç → artış (%) gir → tahmini izlenme etkisini sayısal gör</div>
+        </div>
+
+        <div class="sim-wrap">
+          <div class="sim-panel">
+            <div class="sim-grid">
+              <div class="field">
+                <label for="simPeriod">Özel Dönem</label>
+                <select id="simPeriod">
+                  <option>Sevgililer Günü</option>
+                  <option>Yaz</option>
+                  <option>Kış</option>
+                  <option selected>Yılbaşı</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="simType">İçerik Tipi</label>
+                <select id="simType">
+                  <option>Film</option>
+                  <option selected>Dizi</option>
+                  <option>Kısa İçerik</option>
+                  <option>Animasyon</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="simGenre">İçerik Türü</label>
+                <select id="simGenre">
+                  <option>Aksiyon</option>
+                  <option>Dram</option>
+                  <option>Komedi</option>
+                  <option>Bilim Kurgu</option>
+                  <option>Gerilim</option>
+                  <option>Korku</option>
+                  <option selected>Romantik</option>
+                  <option>Suç</option>
+                  <option>Macera</option>
+                  <option>Fantastik</option>
+                  <option>Gençlik</option>
+                  <option>Aile</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="simIncrease">İçerik Artışı (%)</label>
+                <input id="simIncrease" type="number" min="0" max="60" step="1" value="10" />
+              </div>
+
+              <div class="field">
+                <label for="simCount">Ek İçerik Adedi (opsiyonel)</label>
+                <input id="simCount" type="number" min="0" max="50" step="1" value="6" />
+              </div>
+
+              <div class="field">
+                <label>Not</label>
+                <div class="chip">Model: <b>pikte geçmiş performans ağırlığı</b> + <b>tip/tür katsayısı</b></div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="btnRunSim" type="button">Simülasyonu Çalıştır</button>
+              <button class="btn" id="btnResetSim" type="button">Sıfırla</button>
+            </div>
+          </div>
+
+          <div class="sim-results">
+            <div class="result-card">
+              <div class="result-title">Tahmini İzlenme Artışı</div>
+              <div class="result-val" id="simOutPct">+0%</div>
+              <div class="result-sub" id="simOutPctSub">Seçili dönem bazlı</div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">Tahmini Ek İzlenme (Sayısal)</div>
+              <div class="result-val" id="simOutAbs">+0</div>
+              <div class="result-sub" id="simOutAbsSub">Baz dönem izlenmesine göre</div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-title">Yatırım Notu</div>
+              <div class="result-sub" id="simOutNote">—</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // ------------------------------
+    // 0) Sabitler
+    // ------------------------------
+    const MONTHS_LONG = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+    const MONTHS_SHORT = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+
+    const TYPES = ["Film","Dizi","Kısa İçerik","Animasyon"];
+    const GENRES = ["Aksiyon","Dram","Komedi","Bilim Kurgu","Gerilim","Korku","Romantik","Suç","Macera","Fantastik","Gençlik","Aile"];
+
+    const SPECIALS = ["Sevgililer Günü","Yaz","Kış","Yılbaşı"];
+
+    // Özel dönem mapping (eksiksiz)
+    const SPECIAL_MONTHS = {
+      "Sevgililer Günü": [1],        // Şubat
+      "Yaz": [6,7],                  // Temmuz, Ağustos
+      "Kış": [0,1],                  // Ocak, Şubat
+      "Yılbaşı": [11]                // Aralık
+    };
+
+    // Renk paleti: sade & tutarlı (karman çorman yok)
+    const C = {
+      line: "rgba(139,92,246,1)",       // mor
+      fill: "rgba(139,92,246,.18)",
+      peak: "rgba(16, 185, 129, 1)",    // yeşil nokta
+      grid: "rgba(255,255,255,.08)",
+      text: "rgba(255,255,255,.90)",
+      dim: "rgba(255,255,255,.60)",
+
+      type: {
+        "Film": "rgba(59,130,246,1)",        // mavi
+        "Dizi": "rgba(139,92,246,1)",        // mor
+        "Kısa İçerik": "rgba(245,158,11,1)", // amber
+        "Animasyon": "rgba(34,197,94,1)"     // yeşil
+      },
+
+      // türlerde aynı ton ailesi (fazla renk patlamasın)
+      genreBase: [
+        "rgba(139,92,246,1)",
+        "rgba(99,102,241,1)",
+        "rgba(59,130,246,1)",
+        "rgba(14,165,233,1)",
+        "rgba(34,197,94,1)",
+        "rgba(245,158,11,1)",
+        "rgba(236,72,153,1)",
+        "rgba(244,63,94,1)",
+        "rgba(168,85,247,1)",
+        "rgba(20,184,166,1)",
+        "rgba(147,197,253,1)",
+        "rgba(251,191,36,1)"
+      ]
+    };
+
+    // Chart.js global
+    Chart.defaults.color = C.text;
+    Chart.defaults.borderColor = C.grid;
+    Chart.defaults.font.family = 'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+    // ------------------------------
+    // 1) Demo veri (DB bağlayınca burayı API ile değiştirirsin)
+    // ------------------------------
+    const DATA = {
+      2023: {
+        monthlyViews: [3200, 4500, 3800, 3500, 3300, 3100, 5200, 5400, 4100, 3900, 4300, 6100],
+        // month -> type shares (toplam 100)
+        peakTypeSplit: {
+          // şubat, tem, ağu, ara odaklı (diğerleri gerekmez)
+          1:  { "Film": 28, "Dizi": 44, "Kısa İçerik": 18, "Animasyon": 10 },
+          6:  { "Film": 24, "Dizi": 52, "Kısa İçerik": 16, "Animasyon": 8  },
+          7:  { "Film": 22, "Dizi": 54, "Kısa İçerik": 16, "Animasyon": 8  },
+          11: { "Film": 30, "Dizi": 42, "Kısa İçerik": 12, "Animasyon": 16 }
+        },
+        peakGenreSplit: {
+          1:  [8,14,10,6,7,5,20,6,7,6,6,5],   // Şubat
+          6:  [9,10,12,7,6,5,14,7,9,8,7,6],  // Temmuz
+          7:  [8,9,12,8,6,5,13,7,10,9,7,6],  // Ağustos
+          11: [6,12,10,6,5,4,11,5,7,14,6,14] // Aralık (Yılbaşı)
+        }
+      },
+
+      2024: {
+        monthlyViews: [3400, 4700, 4000, 3700, 3500, 3300, 5600, 5900, 4300, 4100, 4500, 6400],
+        peakTypeSplit: {
+          1:  { "Film": 26, "Dizi": 46, "Kısa İçerik": 18, "Animasyon": 10 },
+          6:  { "Film": 22, "Dizi": 56, "Kısa İçerik": 14, "Animasyon": 8  },
+          7:  { "Film": 21, "Dizi": 57, "Kısa İçerik": 14, "Animasyon": 8  },
+          11: { "Film": 29, "Dizi": 41, "Kısa İçerik": 12, "Animasyon": 18 }
+        },
+        peakGenreSplit: {
+          1:  [7,13,9,6,7,5,22,6,7,6,6,6],
+          6:  [10,9,11,7,6,5,13,7,9,8,7,6],
+          7:  [9,9,12,8,6,5,12,7,10,9,7,6],
+          11: [6,11,9,6,5,4,10,5,7,15,6,16]
+        }
+      },
+
+      2025: {
+        monthlyViews: [3600, 4900, 4200, 3900, 3700, 3500, 5900, 6200, 4600, 4400, 4800, 6700],
+        peakTypeSplit: {
+          1:  { "Film": 25, "Dizi": 47, "Kısa İçerik": 18, "Animasyon": 10 },
+          6:  { "Film": 21, "Dizi": 58, "Kısa İçerik": 13, "Animasyon": 8  },
+          7:  { "Film": 20, "Dizi": 59, "Kısa İçerik": 13, "Animasyon": 8  },
+          11: { "Film": 28, "Dizi": 40, "Kısa İçerik": 12, "Animasyon": 20 }
+        },
+        peakGenreSplit: {
+          1:  [7,12,9,6,7,5,23,6,7,6,6,6],
+          6:  [10,9,10,7,6,5,13,7,10,8,7,6],
+          7:  [9,9,11,8,6,5,12,7,11,9,7,6],
+          11: [6,10,9,6,5,4,10,5,7,15,6,17]
+        }
+      }
+    };
+
+    function mergeAllYears() {
+      const years = [2023,2024,2025];
+      const sum = (arrs) => arrs[0].map((_,i)=> arrs.reduce((a,arr)=>a+arr[i],0));
+      const monthlyViews = sum(years.map(y => DATA[y].monthlyViews));
+
+      // all years için type/genre split'te ortalama alalım (daha temiz)
+      const avgType = (m) => {
+        const out = {};
+        TYPES.forEach(t => {
+          out[t] = Math.round(years.reduce((a,y)=> a + (DATA[y].peakTypeSplit[m]?.[t] ?? 0), 0) / years.length);
+        });
+        // yuvarlama sapmasını düzelt
+        const s = TYPES.reduce((a,t)=>a+out[t],0);
+        out["Dizi"] += (100 - s);
+        return out;
+      };
+
+      const avgGenre = (m) => {
+        const out = GENRES.map((_,i)=>
+          Math.round(years.reduce((a,y)=> a + (DATA[y].peakGenreSplit[m]?.[i] ?? 0), 0) / years.length)
+        );
+        // toplamı 100'e yaklaştır (son elemana düzelt)
+        const s = out.reduce((a,v)=>a+v,0);
+        out[out.length-1] += (100 - s);
+        return out;
+      };
+
+      return {
+        monthlyViews,
+        peakTypeSplit: { 1: avgType(1), 6: avgType(6), 7: avgType(7), 11: avgType(11) },
+        peakGenreSplit: { 1: avgGenre(1), 6: avgGenre(6), 7: avgGenre(7), 11: avgGenre(11) }
+      };
+    }
+
+    // ------------------------------
+    // 2) State & Helpers
+    // ------------------------------
+    let activeYear = "all";
+
+    function getState(yearKey){
+      if(yearKey === "all") return mergeAllYears();
+      return DATA[+yearKey];
+    }
+
+    function maxIndex(arr){
+      let mi = 0;
+      for(let i=1;i<arr.length;i++) if(arr[i] > arr[mi]) mi=i;
+      return mi;
+    }
+    function minIndex(arr){
+      let mi = 0;
+      for(let i=1;i<arr.length;i++) if(arr[i] < arr[mi]) mi=i;
+      return mi;
+    }
+
+    function pct(n){ return (n>=0?"+":"") + n.toFixed(0) + "%"; }
+
+    // Pik ayları seç: en yüksek 3 ay (KDS için yeterli)
+    function getTopKMonths(monthlyViews, k=3){
+      const idx = monthlyViews.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v).slice(0,k).map(o=>o.i);
+      idx.sort((a,b)=>a-b);
+      return idx;
+    }
+
+    function monthToSpecialName(mIndex){
+      if(mIndex === 1) return "Sevgililer Günü"; // Şubat
+      if(mIndex === 11) return "Yılbaşı";        // Aralık
+      if(mIndex === 6 || mIndex === 7) return "Yaz"; // Tem/Ağu
+      if(mIndex === 0) return "Kış";
+      return "";
+    }
+
+    function buildPeakChips(topMonths){
+      const wrap = document.getElementById("peakChips");
+      wrap.innerHTML = "";
+      topMonths.forEach(m => {
+        const sp = monthToSpecialName(m);
+        const el = document.createElement("div");
+        el.className = "chip";
+        el.innerHTML = `Pik: <b>${MONTHS_LONG[m]}</b>` + (sp ? ` • <span>${sp}</span>` : "");
+        wrap.appendChild(el);
+      });
+    }
+
+    // Özel dönem izlenmesi: ilgili ayların toplamı
+    function specialTotalViews(state, period){
+      const months = SPECIAL_MONTHS[period] || [];
+      const sum = months.reduce((a,m)=> a + state.monthlyViews[m], 0);
+      return sum;
+    }
+
+    // Özel dönem genre dağılımını (100'lük) hesapla: ilgili ayların genre split ortalaması
+    function specialGenreDist(state, period){
+      const months = SPECIAL_MONTHS[period] || [];
+      const lists = months.map(m => state.peakGenreSplit[m] || GENRES.map(_=>0));
+      if(!lists.length) return GENRES.map(_=>0);
+
+      const avg = GENRES.map((_,i)=> Math.round(lists.reduce((a,arr)=>a+arr[i],0) / lists.length));
+      const s = avg.reduce((a,v)=>a+v,0);
+      avg[avg.length-1] += (100 - s);
+      return avg;
+    }
+
+    // Özel dönem type dağılımı (100'lük)
+    function specialTypeDist(state, period){
+      const months = SPECIAL_MONTHS[period] || [];
+      const dist = {};
+      TYPES.forEach(t => dist[t]=0);
+
+      if(!months.length) return dist;
+
+      months.forEach(m => {
+        const s = state.peakTypeSplit[m];
+        if(s) TYPES.forEach(t => dist[t]+=s[t]);
+      });
+
+      TYPES.forEach(t => dist[t] = Math.round(dist[t] / months.length));
+      const s = TYPES.reduce((a,t)=>a+dist[t],0);
+      dist["Dizi"] += (100 - s);
+      return dist;
+    }
+
+    // ------------------------------
+    // 3) Charts
+    // ------------------------------
+    let chartMonthlyTrend, chartPeakByType, chartPeakByGenre, chartSpecialTypeStack, chartSpecialGenreBar;
+
+    const baseGridScales = {
+      x: { grid: { color: C.grid }, ticks: { color: C.dim } },
+      y: { grid: { color: C.grid }, ticks: { color: C.dim }, beginAtZero: true }
+    };
+
+    function destroyAll(){
+      [chartMonthlyTrend, chartPeakByType, chartPeakByGenre, chartSpecialTypeStack, chartSpecialGenreBar]
+        .forEach(ch => ch && ch.destroy());
+    }
+
+    function renderMonthlyTrend(state){
+      const topMonths = getTopKMonths(state.monthlyViews, 3);
+      buildPeakChips(topMonths);
+
+      const peakPointRadius = state.monthlyViews.map((_,i)=> topMonths.includes(i) ? 7 : 3);
+      const peakPointBg = state.monthlyViews.map((_,i)=> topMonths.includes(i) ? C.peak : C.line);
+      const peakPointBorder = state.monthlyViews.map((_,i)=> topMonths.includes(i) ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.15)");
+      const peakPointBorderW = state.monthlyViews.map((_,i)=> topMonths.includes(i) ? 3 : 1);
+
+      const ctx = document.getElementById("chartMonthlyTrend");
+
+      chartMonthlyTrend = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: MONTHS_SHORT,
+          datasets: [{
+            label: "İzlenme",
+            data: state.monthlyViews,
+            borderColor: C.line,
+            backgroundColor: C.fill,
+            tension: 0.35,
+            pointRadius: peakPointRadius,
+            pointHoverRadius: 8,
+            pointBackgroundColor: peakPointBg,
+            pointBorderColor: peakPointBorder,
+            pointBorderWidth: peakPointBorderW,
+            fill: true
+          }]
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins: {
+            legend: { display:false },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  const idx = items[0].dataIndex;
+                  const sp = monthToSpecialName(idx);
+                  return sp ? `${MONTHS_LONG[idx]} • ${sp}` : MONTHS_LONG[idx];
+                }
+              }
+            }
+          },
+          scales: {
+            x: baseGridScales.x,
+            y: {
+              ...baseGridScales.y,
+              ticks: { color: C.dim },
+              suggestedMax: Math.max(...state.monthlyViews) * 1.15
+            }
+          }
+        }
+      });
+
+      return topMonths;
+    }
+
+    function renderPeakByType(state, topMonths){
+      const months = topMonths.length ? topMonths : [1,7,11];
+      const labels = months.map(m => {
+        const sp = monthToSpecialName(m);
+        return sp ? `${MONTHS_SHORT[m]} (${sp})` : MONTHS_SHORT[m];
+      });
+
+      const datasets = TYPES.map(t => ({
+        label: t,
+        data: months.map(m => (state.peakTypeSplit[m]?.[t] ?? 0)),
+        backgroundColor: C.type[t],
+        borderRadius: 10
+      }));
+
+      const ctx = document.getElementById("chartPeakByType");
+      chartPeakByType = new Chart(ctx, {
+        type: "bar",
+        data: { labels, datasets },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins: {
+            legend: { position:"top" },
+            tooltip: {
+              callbacks: {
+                label: (item) => `${item.dataset.label}: ${item.formattedValue}%`
+              }
+            }
+          },
+          scales: {
+            x: baseGridScales.x,
+            y: { ...baseGridScales.y, max: 100, ticks: { color: C.dim, callback: (v)=> v + "%" } }
+          }
+        }
+      });
+    }
+
+    function renderPeakByGenre(state, topMonths){
+      // Türlerde 12 bar: okunabilirlik için yatay bar
+      const months = topMonths.length ? topMonths : [1,7,11];
+
+      // Her tür için (pik aylar ortalaması) -> tek grafikte anlaşılır
+      const avgGenre = GENRES.map((g,gi)=>{
+        const vals = months.map(m => (state.peakGenreSplit[m]?.[gi] ?? 0));
+        return Math.round(vals.reduce((a,v)=>a+v,0)/vals.length);
+      });
+
+      // bar sıralaması: büyükten küçüğe (okunması kolay)
+      const paired = GENRES.map((g,i)=>({g,val:avgGenre[i], color:C.genreBase[i]})).sort((a,b)=>b.val-a.val);
+
+      const ctx = document.getElementById("chartPeakByGenre");
+      chartPeakByGenre = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: paired.map(p=>p.g),
+          datasets: [{
+            label: "Pik Aylarda Pay",
+            data: paired.map(p=>p.val),
+            backgroundColor: paired.map(p=>p.color),
+            borderRadius: 10
+          }]
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          indexAxis: "y",
+          plugins: {
+            legend: { display:false },
+            tooltip: {
+              callbacks: {
+                label: (item) => `${item.formattedValue}%`
+              }
+            }
+          },
+          scales: {
+            x: { ...baseGridScales.x, max: 30, ticks: { color: C.dim, callback:(v)=>v+"%" } },
+            y: { ...baseGridScales.y, ticks: { color: C.dim } }
+          }
+        }
+      });
+    }
+
+    function renderSpecialCharts(state, period){
+      // (A) Tip stacked
+      const typeDist = specialTypeDist(state, period);
+      const ctxA = document.getElementById("chartSpecialTypeStack");
+      chartSpecialTypeStack = new Chart(ctxA, {
+        type: "bar",
+        data: {
+          labels: [period],
+          datasets: TYPES.map(t => ({
+            label: t,
+            data: [typeDist[t]],
+            backgroundColor: C.type[t],
+            borderRadius: 10
+          }))
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins: { legend:{ position:"top" } },
+          scales: {
+            x: baseGridScales.x,
+            y: { ...baseGridScales.y, stacked:true, max:100, ticks:{ color:C.dim, callback:(v)=>v+"%" } }
+          }
+        }
+      });
+
+      // (B) Tür yatay bar (seçili dönemin tür yoğunluğu)
+      const gDist = specialGenreDist(state, period);
+      const paired = GENRES.map((g,i)=>({g,val:gDist[i], color:C.genreBase[i]})).sort((a,b)=>b.val-a.val);
+
+      const ctxB = document.getElementById("chartSpecialGenreBar");
+      chartSpecialGenreBar = new Chart(ctxB, {
+        type: "bar",
+        data: {
+          labels: paired.map(p=>p.g),
+          datasets: [{
+            label: "Dönem Payı",
+            data: paired.map(p=>p.val),
+            backgroundColor: paired.map(p=>p.color),
+            borderRadius: 10
+          }]
+        },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          indexAxis: "y",
+          plugins: { legend:{ display:false } },
+          scales: {
+            x: { ...baseGridScales.x, max: 35, ticks:{ color:C.dim, callback:(v)=>v+"%" } },
+            y: { ...baseGridScales.y, ticks:{ color:C.dim } }
+          }
+        }
+      });
+    }
+
+    // ------------------------------
+    // 4) KPI hesapları
+    // ------------------------------
+    function updateKpis(state){
+      const maxI = maxIndex(state.monthlyViews);
+      const minI = minIndex(state.monthlyViews);
+      const maxV = state.monthlyViews[maxI];
+      const minV = state.monthlyViews[minI];
+
+      document.getElementById("kpiPeakMonth").textContent = MONTHS_LONG[maxI];
+      const sp = monthToSpecialName(maxI);
+      document.getElementById("kpiPeakMonthSub").textContent = sp ? `${sp} etkisi görülebilir` : `Pik ay (yıl filtresine göre)`;
+
+      const diffPct = ((maxV - minV) / Math.max(1, minV)) * 100;
+      document.getElementById("kpiPeakDip").textContent = diffPct.toFixed(0) + "%";
+
+      // özel dönem katkısı: (Şubat + Temmuz + Ağustos + Aralık + Ocak) / toplam
+      const specialMonths = new Set([0,1,6,7,11]);
+      const specialSum = state.monthlyViews.reduce((a,v,i)=> a + (specialMonths.has(i)?v:0), 0);
+      const total = state.monthlyViews.reduce((a,v)=>a+v,0);
+      const share = total ? (specialSum/total)*100 : 0;
+      document.getElementById("kpiSpecialShare").textContent = share.toFixed(0) + "%";
+
+      // en güçlü dönem türü: default "Yılbaşı" için top tür
+      const period = document.getElementById("specialSelect").value || "Yılbaşı";
+      const gDist = specialGenreDist(state, period);
+      let best = 0;
+      for(let i=1;i<gDist.length;i++) if(gDist[i] > gDist[best]) best = i;
+
+      document.getElementById("kpiTopGenre").textContent = GENRES[best];
+      document.getElementById("kpiTopGenreSub").textContent = `${period} döneminde öne çıkıyor`;
+    }
+
+    // ------------------------------
+    // 5) Simülasyon (sayısal)
+    // ------------------------------
+    function runSimulation(state){
+      const period = document.getElementById("simPeriod").value;
+      const type = document.getElementById("simType").value;
+      const genre = document.getElementById("simGenre").value;
+      const inc = Math.max(0, +document.getElementById("simIncrease").value || 0);
+      const count = Math.max(0, +document.getElementById("simCount").value || 0);
+
+      // Baz: dönemin toplam izlenmesi
+      const base = specialTotalViews(state, period);
+
+      // Tip ağırlığı (dönem içinde tip payı)
+      const tDist = specialTypeDist(state, period);
+      const typeShare = (tDist[type] ?? 0) / 100;
+
+      // Tür ağırlığı (dönem içinde tür payı)
+      const gDist = specialGenreDist(state, period);
+      const gIndex = GENRES.indexOf(genre);
+      const genreShare = (gIndex >= 0 ? gDist[gIndex] : 0) / 100;
+
+      // Basit ama KDS’e uygun katsayı: geçmiş paylar + artış
+      // içerik adedi opsiyonel: küçük çarpan (operasyonel değil, sadece yatırım büyüklüğü göstergesi)
+      const countBoost = Math.min(0.18, count * 0.01);   // 0..18%
+      const incBoost = Math.min(0.60, inc / 100);        // 0..60%
+
+      // Etki: (tip payı * 0.55) + (tür payı * 0.45) temel, sonra artış katsayıları
+      const baseWeight = (typeShare * 0.55) + (genreShare * 0.45);
+
+      // Tahmini % artış: artış * ağırlık * (1 + countBoost)
+      const estPct = (incBoost * baseWeight) * (1 + countBoost);
+
+      // Sayısal ek izlenme
+      const estAbs = Math.round(base * estPct);
+
+      const pctOut = Math.round(estPct * 100);
+      document.getElementById("simOutPct").textContent = (pctOut>=0?"+":"") + pctOut + "%";
+      document.getElementById("simOutAbs").textContent = "+" + estAbs.toLocaleString("tr-TR");
+
+      document.getElementById("simOutPctSub").textContent = `${period} • ${type} • ${genre}`;
+      document.getElementById("simOutAbsSub").textContent = `Baz izlenme: ${base.toLocaleString("tr-TR")} (demo)`;
+
+      // Yatırım notu (çok kısa, anlaşılır)
+      let note = "";
+      if (pctOut >= 8) note = "Güçlü sinyal: Bu özel dönemde seçilen tip+tür geçmişte yüksek pay almış. Yatırım artırımı mantıklı.";
+      else if (pctOut >= 4) note = "Orta sinyal: Etki var ama sınırlı. Artışı yükseltmeyi veya daha güçlü tür/tip kombinasyonunu test etmeyi düşün.";
+      else note = "Zayıf sinyal: Seçilen kombinasyon bu özel dönemde düşük pay alıyor. Tür/tip değiştirerek yeniden dene.";
+      document.getElementById("simOutNote").textContent = note;
+    }
+
+    function resetSimulation(){
+      document.getElementById("simPeriod").value = "Yılbaşı";
+      document.getElementById("simType").value = "Dizi";
+      document.getElementById("simGenre").value = "Romantik";
+      document.getElementById("simIncrease").value = 10;
+      document.getElementById("simCount").value = 6;
+      document.getElementById("simOutPct").textContent = "+0%";
+      document.getElementById("simOutAbs").textContent = "+0";
+      document.getElementById("simOutPctSub").textContent = "Seçili dönem bazlı";
+      document.getElementById("simOutAbsSub").textContent = "Baz dönem izlenmesine göre";
+      document.getElementById("simOutNote").textContent = "—";
+    }
+
+    // ------------------------------
+    // 6) Render pipeline
+    // ------------------------------
+    function refreshAll(){
+      const state = getState(activeYear);
+      destroyAll();
+
+      const topMonths = renderMonthlyTrend(state);
+      renderPeakByType(state, topMonths);
+      renderPeakByGenre(state, topMonths);
+
+      const period = document.getElementById("specialSelect").value || "Yılbaşı";
+      renderSpecialCharts(state, period);
+
+      updateKpis(state);
+      runSimulation(state);
+    }
+
+    // ------------------------------
+    // 7) Events
+    // ------------------------------
+    document.querySelectorAll(".seg-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".seg-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeYear = btn.dataset.year;
+        refreshAll();
+      });
+    });
+
+    document.getElementById("specialSelect").addEventListener("change", () => {
+      const state = getState(activeYear);
+      // sadece özel dönem chartlarını yenile
+      chartSpecialTypeStack && chartSpecialTypeStack.destroy();
+      chartSpecialGenreBar && chartSpecialGenreBar.destroy();
+      renderSpecialCharts(state, document.getElementById("specialSelect").value);
+      updateKpis(state);
+      // simülasyonu da aynı döneme yaklaştıralım (kullanıcı isterse ayrı seçebilir)
+    });
+
+    document.getElementById("btnRunSim").addEventListener("click", () => {
+      runSimulation(getState(activeYear));
+    });
+    document.getElementById("btnResetSim").addEventListener("click", () => {
+      resetSimulation();
+      runSimulation(getState(activeYear));
+    });
+
+    // input değiştikçe canlı güncelle (KDS “çevik”)
+    ["simPeriod","simType","simGenre","simIncrease","simCount"].forEach(id => {
+      document.getElementById(id).addEventListener("input", ()=> runSimulation(getState(activeYear)));
+    });
+
+    // initial
+    resetSimulation();
+    refreshAll();
+  </script>
+</body>
+</html>  
