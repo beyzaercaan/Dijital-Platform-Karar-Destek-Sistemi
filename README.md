@@ -28,7 +28,6 @@ Platformda yer alan kullanıcı profilleri, izleme davranışları, içerik tür
 - JavaScript
 - HTML / CSS
 - Chart.js
-- D3.js
 - Leaflet.js
 
 **İŞ KURALLARI**
@@ -73,5 +72,6 @@ Dashboard panelinde içerik tipine göre dağılım, izlenme ve beğeni trendler
 - DELETE /api/analiz/izlenme-trend – İzlenme trend verisini siler
 - DELETE /api/analiz/begeni-trend – Beğeni trend verisini siler
 - DELETE /api/analiz/etkileşim-haritasi – Harita verisini siler
+
 
 
