@@ -32,19 +32,19 @@ Platformda yer alan kullanıcı profilleri, izleme davranışları, içerik tür
 
 **İŞ KURALLARI**
 
-1) Veri ve dönem kısıtlaması
+**1) Veri ve dönem kısıtlaması**
 Sistem yalnızca mevcut 3 yıllık izleme ve etkileşim verilerini analiz eder. Bu dönem dışındaki veriler seçildiğinde KPI ve grafikler üretilmez.
 
-2) KPI ve grafik hesaplama kuralı
+**2) KPI ve grafik hesaplama kuralı**
 Ana panelde ve seasonality grafikleri için tüm içeriklerin ilgili dönemlerdeki izlenme ve beğeni verileri toplanarak hesaplanır. Bu sayede trend ve performans görselleştirmeleri doğru şekilde sunulur.
 
-3) İçerik ve dönem eşleştirme kuralı
+**3) İçerik ve dönem eşleştirme kuralı**
 Seçilen içerik veya dönem için veriler yoksa ilgili grafik veya tablo boş gösterilir.
 
-4) Veri bütünlüğü ve güncellik kuralı
+**4) Veri bütünlüğü ve güncellik kuralı**
 Yeni kullanıcı, içerik veya izleme verileri eklendiğinde sistem analizleri otomatik olarak günceller; böylece KPI ve trendler her zaman güncel kalır.
 
-5) Grafik ve panel kullanımı zorunluluğu
+**5) Grafik ve panel kullanımı zorunluluğu**
 Dashboard panelinde içerik tipine göre dağılım, izlenme ve beğeni trendleri, dönemsel analizler ve harita görselleştirmeleri minimum bir içerik seçilmeden gösterilemez.
 
 **API ENDPOİNTLERİ**
@@ -76,6 +76,7 @@ Dashboard panelinde içerik tipine göre dağılım, izlenme ve beğeni trendler
 **ER DİYAGRAMI**
 
 <img width="1572" height="551" alt="kds_er_diyagramı" src="https://github.com/user-attachments/assets/2cbef92b-14c3-4d2a-89ab-f2fa52436326" />
+
 
 
 
